@@ -1,0 +1,21 @@
+{
+  "name": "pulse-music",
+  "version": "1.0.0",
+  "description": "Independent music streaming with Audius, React, and a device-local music library",
+  "scripts": {
+    "build": "esbuild src/main.jsx --bundle --minify --outfile=dist/app.js",
+    "dev": "python3 -m http.server 3000 --directory dist",
+    "prebuild": "python3 scripts/generate-demo-audio.py",
+    "test": "node tests/player.test.mjs && node tests/catalog.test.mjs"
+  },
+  "keywords": [],
+  "author": "",
+  "type": "commonjs",
+  "dependencies": {
+    "esbuild": "^0.28.2",
+    "lucide-react": "^1.65.0",
+    "react": "^19.3.1",
+    "react-dom": "^19.3.1"
+  },
+  "private": true
+}

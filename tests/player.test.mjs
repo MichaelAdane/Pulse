@@ -1,0 +1,17 @@
+import assert from 'node:assert/strict';
+import {adjacentTrack} from '../src/queue.mjs';
+import {attachMediaSession,clampSeek,updatePosition} from '../src/media.mjs';
+const q=[{id:'a'},{id:'b'},{id:'c'}];
+assert.equal(adjacentTrack(q,'c',1).id,'a');assert.equal(adjacentTrack(q,'a',-1).id,'c');
+assert.equal(adjacentTrack(q,'a',1,true,()=>0).id,'b');assert.equal(adjacentTrack(q,'a',1,true,()=>.99).id,'c');
+assert.equal(adjacentTrack([q[0]],'a',1,true).id,'a');assert.equal(adjacentTrack([],'a',1),null);
+assert.equal(clampSeek(-10,60),0);assert.equal(clampSeek(90,60),60);assert.equal(clampSeek(5,NaN),0);
+const handlers={},calls=[];const session={setActionHandler:(action,fn)=>{handlers[action]=fn},setPositionState:state=>calls.push(state)};
+const audio={currentTime:20,duration:60,playbackRate:1,pause:()=>calls.push('pause')};
+const cleanup=attachMediaSession(session,audio,{play:()=>calls.push('play'),next:()=>calls.push('next'),previous:()=>calls.push('prev')});
+handlers.play();handlers.pause();handlers.nexttrack();handlers.previoustrack();assert.deepEqual(calls,['play','pause','next','prev']);
+handlers.seekforward({seekOffset:100});assert.equal(audio.currentTime,60);handlers.seekbackward({seekOffset:100});assert.equal(audio.currentTime,0);handlers.seekto({seekTime:35});assert.equal(audio.currentTime,35);updatePosition(session,audio);assert.deepEqual(calls.at(-1),{duration:60,playbackRate:1,position:35});
+handlers.stop();assert.equal(audio.currentTime,0);cleanup();assert.ok(Object.values(handlers).every(x=>x===null));
+assert.doesNotThrow(()=>attachMediaSession(undefined,audio,{}));assert.doesNotThrow(()=>attachMediaSession({setActionHandler:()=>{throw Error('unsupported')}},audio,{}));
+audio.duration=NaN;updatePosition(session,audio);assert.equal(calls.at(-1),undefined);
+console.log('Queue, lock-screen actions, seek bounds, stop, cleanup and unsupported-browser checks passed.');

@@ -1,0 +1,8 @@
+import assert from 'node:assert/strict';import{normalizeTrack,fetchCatalog}from'../src/catalog.mjs';
+const raw={id:'abc123',title:'A song',is_streamable:true,is_stream_gated:false,is_available:true,user:{name:'An artist',id:'u1',profile_picture:{'150x150':'https://example.org/artist.jpg'}},artwork:{'480x480':'https://example.org/cover.jpg'},duration:125,genre:'Electronic',permalink:'/artist/a-song'};
+const t=normalizeTrack(raw);assert.equal(t.id,'audius-abc123');assert.equal(t.artwork,'https://example.org/cover.jpg');assert.equal(t.artistImage,'https://example.org/artist.jpg');assert.equal(t.permalink,'https://audius.co/artist/a-song');assert.ok(t.src.includes('/abc123/stream?'));assert.equal(normalizeTrack({...raw,is_stream_gated:true}),null);assert.equal(normalizeTrack({...raw,is_streamable:false}),null);assert.equal(normalizeTrack({...raw,is_available:false}),null);assert.equal(normalizeTrack({...raw,artwork:{'480x480':'javascript:alert(1)'}}).artwork,undefined);
+let url;globalThis.fetch=async u=>{url=u;return{ok:true,json:async()=>({data:[raw,{...raw,is_stream_gated:true}]})}};
+assert.equal((await fetchCatalog({query:'ambient & jazz',genre:'Jazz'})).length,1);assert.ok(url.includes('query=ambient+%26+jazz'));assert.ok(url.includes('genre=Jazz'));
+globalThis.fetch=async()=>({ok:false,status:429});await assert.rejects(fetchCatalog(),/too many requests/);
+globalThis.fetch=async()=>({ok:true,json:async()=>({data:null})});await assert.rejects(fetchCatalog(),/unexpected response/);
+console.log('Catalog mapping, artwork, restricted-track filtering, search encoding and failure states passed.');

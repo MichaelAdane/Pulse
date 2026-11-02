@@ -1,0 +1,11 @@
+node_modules/
+dist/app.js
+dist/app.css
+dist/audio/
+dist/*.zip
+.env
+.env.*
+!.env.example
+__pycache__/
+.DS_Store
+.openai/
